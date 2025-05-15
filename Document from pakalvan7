@@ -1,0 +1,146 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "3103485e",
+   "metadata": {},
+   "source": [
+    "# Movie Recommendation System\n",
+    "This notebook demonstrates a simple content-based movie recommendation system using TF-IDF and cosine similarity."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "a3e32318",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "from sklearn.feature_extraction.text import TfidfVectorizer\n",
+    "from sklearn.metrics.pairwise import linear_kernel"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "f6d9356b",
+   "metadata": {},
+   "source": [
+    "### Sample Dataset"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "0102b989",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Sample movie dataset\n",
+    "movies = pd.DataFrame({\n",
+    "    'movie_id': [1, 2, 3, 4, 5],\n",
+    "    'title': ['The Matrix', 'The Godfather', 'Pulp Fiction', 'The Dark Knight', 'Inception'],\n",
+    "    'description': [\n",
+    "        'A computer hacker learns about the true nature of his reality.',\n",
+    "        'The aging patriarch of an organized crime dynasty transfers control to his reluctant son.',\n",
+    "        'The lives of two mob hitmen, a boxer, and others intertwine in four tales of violence and redemption.',\n",
+    "        'Batman raises the stakes in his war on crime.',\n",
+    "        'A thief who steals corporate secrets through dream-sharing technology is given a final task.'\n",
+    "    ]\n",
+    "})\n",
+    "movies"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "584c1107",
+   "metadata": {},
+   "source": [
+    "### TF-IDF Vectorization and Cosine Similarity"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "dfed77a1",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# TF-IDF Vectorizer\n",
+    "tfidf = TfidfVectorizer(stop_words='english')\n",
+    "tfidf_matrix = tfidf.fit_transform(movies['description'])\n",
+    "\n",
+    "# Compute cosine similarity\n",
+    "cosine_sim = linear_kernel(tfidf_matrix, tfidf_matrix)\n",
+    "\n",
+    "# Mapping movie titles to indices\n",
+    "indices = pd.Series(movies.index, index=movies['title']).drop_duplicates()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "4c47ffc1",
+   "metadata": {},
+   "source": [
+    "### Recommendation Function"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "56d676b6",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Recommendation function\n",
+    "def get_recommendations(title, cosine_sim=cosine_sim):\n",
+    "    idx = indices[title]\n",
+    "    sim_scores = list(enumerate(cosine_sim[idx]))\n",
+    "    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)\n",
+    "    sim_scores = sim_scores[1:4]\n",
+    "    movie_indices = [i[0] for i in sim_scores]\n",
+    "    return movies['title'].iloc[movie_indices]"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ee36862a",
+   "metadata": {},
+   "source": [
+    "### Recommendations for 'The Matrix'"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "a774c341",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0    The Godfather\n",
+       "1    Pulp Fiction\n",
+       "2    The Dark Knight\n",
+       "Name: title, dtype: object"
+      ]
+     },
+     "execution_count": 2,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# Get recommendations for 'The Matrix'\n",
+    "recommendations = get_recommendations('The Matrix')\n",
+    "recommendations"
+   ]
+  }
+ ],
+ "metadata": {
+  "language": "python"
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
